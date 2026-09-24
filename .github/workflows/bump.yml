@@ -1,0 +1,40 @@
+name: Bump TextEditor++ cask
+
+# Checks the app's Sparkle feed and updates the cask when a new release is published,
+# so `brew upgrade` picks it up without a manual edit.
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update cask from the appcast
+        run: |
+          set -euo pipefail
+          cask=Casks/texteditorplusplus.rb
+          feed=https://downloads.texteditorplusplus.com/updates/appcast.xml
+
+          latest=$(curl -fsSL "$feed" | grep -o '<sparkle:shortVersionString>[^<]*' | head -1 | cut -d'>' -f2)
+          current=$(sed -n 's/^  version "\(.*\)"$/\1/p' "$cask")
+          [[ "$latest" =~ ^[0-9]+(\.[0-9]+)+$ ]] || { echo "Unexpected version: '$latest'"; exit 1; }
+          echo "current=$current latest=$latest"
+          [ "$latest" = "$current" ] && exit 0
+
+          url="https://downloads.texteditorplusplus.com/releases/TextEditorPlusPlus-${latest}-arm64.dmg"
+          curl -fsSL -o app.dmg "$url"
+          sha=$(sha256sum app.dmg | cut -d' ' -f1)
+          rm app.dmg
+
+          sed -i "s/^  version \".*\"$/  version \"${latest}\"/; s/^  sha256 \".*\"$/  sha256 \"${sha}\"/" "$cask"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "texteditorplusplus ${latest}"
+          git push
