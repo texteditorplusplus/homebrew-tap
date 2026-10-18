@@ -1,6 +1,6 @@
 cask "texteditorplusplus" do
-  version "26.22"
-  sha256 "b3a6e231afb8c163371b12324f055bfd55a006fa16f120e9cf840ffccfcabdaf"
+  version "26.23"
+  sha256 "7921fc621abc49715214265b3363363fd44a20adf160ca672e2e6e4a45a56bbc"
 
   url "https://downloads.texteditorplusplus.com/releases/TextEditorPlusPlus-#{version}-arm64.dmg"
   name "TextEditor++"
